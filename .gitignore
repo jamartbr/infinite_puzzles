@@ -1,0 +1,38 @@
+# Dependencias
+node_modules/
+
+# Build
+dist/
+dist-ssr/
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# Editor
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Sistem
+.DS_Store
+Thumbs.db
+
+# TypeScript build info
+*.tsbuildinfo
+node_modules/.tmp/
+
+# Tests
+coverage/
+playwright-report/
+test-results/
+
+# Env local
+.env.local
+.env.*.local
