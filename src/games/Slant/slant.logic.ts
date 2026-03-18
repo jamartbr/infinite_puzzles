@@ -1,5 +1,5 @@
 import { shuffle } from '@/composables/usePuzzleGenerator'
-import type { SlantCell, SlantClue, SlantClues, SlantState } from '@/types'
+import type { SlantCell, SlantClue, SlantClues, SlantState } from '@/games/Slant/slant.types'
 
 // ─── Clue validation ──────────────────────────────────────────────────────────
 //
