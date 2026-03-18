@@ -6,7 +6,7 @@ import {
   createSlantPuzzle,
   isValidSlantState,
 } from './slant.logic'
-import type { SlantState, SlantCell } from '@/types'
+import type { SlantState, SlantCell } from './slant.types'
 
 const router    = useRouter()
 const store     = useGameStore()
