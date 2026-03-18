@@ -1,0 +1,1 @@
+export type { SlantCell, SlantClue, SlantClues, SlantState } from '@/types'
