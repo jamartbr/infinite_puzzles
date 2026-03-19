@@ -16,8 +16,9 @@ Versiones web de los minijuegos de puzles más populares, jugables de forma ilim
 | Juego | Descripción | Dificultad |
 |-------|-------------|------------|
 <!-- | 👑 **Queens** | Coloca una reina en cada región de color sin que se ataquen. Tableros generados proceduralmente. | ⭐⭐⭐ | -->
-<!-- | ⚡ **Zip** | Traza un camino que pase por todos los números en orden llenando el tablero entero. | ⭐⭐⭐ | -->
+<!-- | ⚡ **Loopy** | Traza un camino que pase por todos los números en orden llenando el tablero entero. | ⭐⭐⭐ | -->
 | ❖ **Slant** | Rellena cada celda con / o \\, cumpliendo con las restricciones, sin formar ciclos cerrados. | ⭐⭐⭐ |
+| 🔢 **Tetonor** | Encuentra parejas de números que resuelvan el puzzle. | ⭐⭐⭐ |
 
 ---
 
@@ -58,10 +59,14 @@ pnpm type-check   # Verificación de tipos TypeScript
 infinite-puzzles/
 ├── src/
 │   ├── games/
-│   │   └── Slant/             # Juego Slant
-│   │       ├── SlantGame.vue
-│   │       ├── slant.logic.ts      # Generador/validador de soluciones
-│   │       └── slant.types.ts
+│   │   ├── Slant/             # Juego Slant
+│   │   │   ├── SlantGame.vue
+│   │   │   ├── slant.logic.ts
+│   │   │   └── slant.types.ts
+│   │   └── Tetonor/             # Juego Tetonor
+│   │       ├── TetonorGame.vue
+│   │       ├── tetonor.logic.ts
+│   │       └── tetonor.types.ts
 │   ├── components/            # UI compartida
 │   │   └── HomeScreen.vue
 │   ├── composables/           # Lógica reutilizable (Vue Composition API)

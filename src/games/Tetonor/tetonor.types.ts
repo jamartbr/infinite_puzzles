@@ -6,12 +6,17 @@ export interface TetonorPair {
   b: number
 }
 
+// Current usage (by user) of a pair of numbers
+export interface PairUsage {
+  usedInSum: boolean
+  usedInProduct: boolean
+  done: boolean
+}
+
 // One cell in the grid
 export interface TetonorCell {
   id: string          // unique id, e.g. "cell-0-0"
   target: number      // the result the player must reach
-  row: number
-  col: number
 }
 
 // The operator the player chose for a cell
@@ -32,7 +37,7 @@ export interface TetonorSlot {
 
 export interface TetonorState {
   // Grid of target numbers
-  grid: TetonorCell[][]
+  cells: TetonorCell[]
   // Sorted strip of operand slots
   strip: TetonorSlot[]
   // Underlying pairs used to generate the puzzle
@@ -41,4 +46,5 @@ export interface TetonorState {
   entries: Map<string, TetonorEntry>
   moves: number
   status: GameStatus
+  level: number
 }

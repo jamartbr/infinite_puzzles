@@ -8,6 +8,7 @@ import {
   validateTetonor,
   getEntry,
   emptyEntry,
+  computePairUsages,
 } from './tetonor.logic'
 import type { TetonorState, TetonorEntry, TetonorOp } from './tetonor.types'
 
@@ -21,13 +22,43 @@ const startedAt = ref(Date.now())
 // ── Derived ───────────────────────────────────────────────────────────────
 const solvedCount = computed(() => {
   let n = 0
-  for (const row of state.value.grid)
-    for (const cell of row)
-      if (evaluateEntry(getEntry(state.value.entries, cell.id), cell.target)) n++
+  for (const cell of state.value.cells)
+    if (evaluateEntry(getEntry(state.value.entries, cell.id), cell.target)) n++
   return n
 })
+const totalCells = computed(() => state.value.pairs.length * 2)
+const pairUsages = computed(() => computePairUsages(state.value))
 
-const totalCells = computed(() => state.value.grid.length ** 2)
+// Cada slot del strip se tacha si el par al que pertenece está done
+// El strip tiene los operandos ordenados; necesitamos mapear slot → par
+const stripUsed = computed(() => {
+  // Para cada slot, busca si algún par con ese valor está done
+  // Consumimos pares done de izquierda a derecha para slots con el mismo valor
+  const doneCounts = new Map<number, number>()
+  for (const u of pairUsages.value.values()) {
+    if (!u.done) continue
+    const pair = state.value.pairs[
+      [...pairUsages.value.values()].indexOf(u) // necesitamos el índice real
+    ]
+    // mejor iterar con entries:
+  }
+  // Reescribimos con entries:
+  const doneByValue = new Map<number, number>()
+  for (const [i, u] of pairUsages.value.entries()) {
+    if (!u.done) continue
+    const { a, b } = state.value.pairs[i]
+    doneByValue.set(a, (doneByValue.get(a) ?? 0) + 1)
+    doneByValue.set(b, (doneByValue.get(b) ?? 0) + 1)
+  }
+
+  const consumed = new Map<number, number>()
+  return state.value.strip.map(slot => {
+    const available = doneByValue.get(slot.value) ?? 0
+    const soFar     = consumed.get(slot.value) ?? 0
+    consumed.set(slot.value, soFar + 1)
+    return soFar < available
+  })
+})
 
 // ── Entry access (reactive wrapper) ──────────────────────────────────────
 function entryFor(cellId: string): TetonorEntry {
@@ -88,7 +119,7 @@ function newGame() {
     <header class="game-header">
       <button class="back-btn" @click="router.push('/')">← Volver</button>
       <div class="header-meta">
-        <span class="game-title">✕ Tetonor</span>
+        <span class="game-title">🔢 Tetonor</span>
         <span class="moves-pill">
           {{ solvedCount }}/{{ totalCells }} resueltas · {{ state.moves }} movimientos
         </span>
@@ -108,68 +139,65 @@ function newGame() {
       <button class="btn btn-ghost btn-sm" @click="newGame">🔄 Nuevo tablero</button>
     </div>
 
-    <!-- 4×4 Grid -->
-    <div class="grid">
+    <!-- Dynamic Grid: width = min(4, cells.length), height = ceil(cells.length / width) -->
+    <div
+      class="grid"
+      :style="{ '--grid-cols': Math.min(4, state.cells.length) }"
+    >
       <div
-        v-for="(row, r) in state.grid"
-        :key="`row-${r}`"
-        class="grid-row"
+        v-for="cell in state.cells"
+        :key="cell.id"
+        class="grid-cell"
+        :class="cellStatus(cell.id, cell.target)"
       >
-        <div
-          v-for="cell in row"
-          :key="cell.id"
-          class="grid-cell"
-          :class="cellStatus(cell.id, cell.target)"
-        >
-          <!-- Target number -->
-          <div class="cell-target">{{ cell.target }}</div>
+        <!-- Target number -->
+        <div class="cell-target">{{ cell.target }}</div>
 
-          <!-- Entry row: left operand · operator toggle · right operand -->
-          <div class="cell-entry">
-            <input
-              class="operand-input"
-              type="number"
-              min="1"
-              :value="entryFor(cell.id).left"
-              @input="e => { entryFor(cell.id).left = (e.target as HTMLInputElement).value; onInput(cell.id) }"
-              placeholder="?"
-            />
+        <!-- Entry row: left operand · operator toggle · right operand -->
+        <div class="cell-entry">
+          <input
+            class="operand-input"
+            type="number"
+            min="1"
+            :value="entryFor(cell.id).left"
+            @input="e => { entryFor(cell.id).left = (e.target as HTMLInputElement).value; onInput(cell.id) }"
+            placeholder="?"
+          />
 
-            <div class="op-toggle">
-              <button
-                class="op-btn"
-                :class="{ active: entryFor(cell.id).op === '+' }"
-                @click="setOp(cell.id, '+')"
-              >+</button>
-              <button
-                class="op-btn"
-                :class="{ active: entryFor(cell.id).op === '×' }"
-                @click="setOp(cell.id, '×')"
-              >×</button>
-            </div>
-
-            <input
-              class="operand-input"
-              type="number"
-              min="1"
-              :value="entryFor(cell.id).right"
-              @input="e => { entryFor(cell.id).right = (e.target as HTMLInputElement).value; onInput(cell.id) }"
-              placeholder="?"
-            />
+          <div class="op-toggle">
+            <button
+              class="op-btn"
+              :class="{ active: entryFor(cell.id).op === '+' }"
+              @click="setOp(cell.id, '+')"
+            >+</button>
+            <button
+              class="op-btn"
+              :class="{ active: entryFor(cell.id).op === '×' }"
+              @click="setOp(cell.id, '×')"
+            >×</button>
           </div>
+
+          <input
+            class="operand-input"
+            type="number"
+            min="1"
+            :value="entryFor(cell.id).right"
+            @input="e => { entryFor(cell.id).right = (e.target as HTMLInputElement).value; onInput(cell.id) }"
+            placeholder="?"
+          />
         </div>
       </div>
     </div>
 
     <!-- Strip -->
     <div class="strip-section">
-      <div class="strip-label">Tira de operandos</div>
+      <br/>
       <div class="strip">
         <div
           v-for="(slot, i) in state.strip"
           :key="`slot-${i}`"
           class="strip-slot"
-          :class="{ hidden: slot.hidden }"
+          :class="{ hidden: slot.hidden, used: stripUsed[i] }"
         >
           <span v-if="!slot.hidden">{{ slot.value }}</span>
           <span v-else class="blank">?</span>
@@ -183,7 +211,7 @@ function newGame() {
 
     <!-- Win result box -->
     <div v-if="state.status === 'won'" class="result-box">
-      <p class="result-emoji">✕</p>
+      <p class="result-emoji">🔥</p>
       <p class="result-title">¡Puzzle resuelto!</p>
       <p class="result-sub">Lo lograste en {{ state.moves }} movimientos.</p>
       <button class="btn btn-primary" @click="newGame">Nuevo tablero</button>
@@ -255,16 +283,10 @@ function newGame() {
 
 /* ── Grid ── */
 .grid {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin-bottom: 28px;
-  width: fit-content;
-}
-
-.grid-row {
-  display: flex;
-  gap: 8px;
+  display: grid;
+  grid-template-columns: repeat(var(--grid-cols), 1fr);
+  gap: 0.75rem;
+  margin-bottom: 20px;
 }
 
 .grid-cell {
@@ -277,6 +299,7 @@ function newGame() {
   flex-direction: column;
   gap: 8px;
   transition: border-color var(--transition), background var(--transition);
+  min-width: 0;
 }
 
 .grid-cell.correct {
@@ -361,6 +384,26 @@ function newGame() {
 /* ── Strip ── */
 .strip-section {
   margin-bottom: 12px;
+}
+
+.strip-slot.used {
+  position: relative;
+  color: var(--muted);
+}
+
+.strip-slot.used::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom right,
+    transparent calc(50% - 1px),
+    #e53e3e calc(50% - 1px),
+    #e53e3e calc(50% + 1px),
+    transparent calc(50% + 1px)
+  );
+  border-radius: inherit;
+  pointer-events: none;
 }
 
 .strip-label {
