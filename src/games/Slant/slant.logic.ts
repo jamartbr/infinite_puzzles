@@ -1,6 +1,6 @@
 import { shuffle } from '@/composables/usePuzzleGenerator'
 import type { SlantCell, SlantClue, SlantClues, SlantState } from './slant.types'
-import { seededRng, seededShuffle, seededRandInt } from '@/composables/useSeededRNG'
+import { seededRng } from '@/composables/useSeededRNG'
 
 // ─── Clue validation ──────────────────────────────────────────────────────────
 //

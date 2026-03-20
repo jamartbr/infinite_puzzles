@@ -8,7 +8,6 @@ import {
   validateTetonor,
   getEntry,
   emptyEntry,
-  computePairUsages,
   computeStripUsed,
 } from './tetonor.logic'
 import type { TetonorState, TetonorEntry, TetonorOp } from './tetonor.types'
@@ -38,7 +37,6 @@ const solvedCount = computed(() => {
   return n
 })
 const totalCells  = computed(() => state.value.pairs.length * 2)
-const pairUsages  = computed(() => computePairUsages(state.value))
 const stripUsed   = computed(() => computeStripUsed(state.value))
 
 // ── Entry access (reactive wrapper) ──────────────────────────────────────
@@ -56,7 +54,7 @@ function cellStatus(cellId: string, target: number): 'empty' | 'correct' | 'wron
 }
 
 // ── Input handlers ────────────────────────────────────────────────────────
-function onInput(cellId: string) {
+function onInput() {
   state.value.moves++
   state.value.status = 'playing'
   checkWin()
@@ -180,7 +178,7 @@ const LEVELS = [
             type="number"
             min="1"
             :value="entryFor(cell.id).left"
-            @input="e => { entryFor(cell.id).left = (e.target as HTMLInputElement).value; onInput(cell.id) }"
+            @input="e => { entryFor(cell.id).left = (e.target as HTMLInputElement).value; onInput() }"
             placeholder="?"
           />
 
@@ -202,7 +200,7 @@ const LEVELS = [
             type="number"
             min="1"
             :value="entryFor(cell.id).right"
-            @input="e => { entryFor(cell.id).right = (e.target as HTMLInputElement).value; onInput(cell.id) }"
+            @input="e => { entryFor(cell.id).right = (e.target as HTMLInputElement).value; onInput() }"
             placeholder="?"
           />
         </div>

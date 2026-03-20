@@ -1,5 +1,4 @@
-import { ref, computed } from 'vue'
-import { dateSeed, todayString, seededRng, seededRandInt, seededShuffle } from './useSeededRNG'
+import { dateSeed, todayString, seededRng, seededRandInt } from './useSeededRNG'
 import type { GameId } from '@/types'
 
 export type DailyGameId = Extract<GameId, 'tetonor' | 'loopy' | 'slant'>
@@ -14,7 +13,6 @@ export interface DailyMeta {
 
 const GAME_IDS: DailyGameId[] = ['tetonor', 'loopy', 'slant']
 
-const LS_META_KEY  = 'daily_meta'
 const LS_STATE_KEY = 'daily_state'
 
 /** Derives today's puzzle parameters deterministically from the date */

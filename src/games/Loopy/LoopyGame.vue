@@ -4,10 +4,6 @@ import { createLoopyState } from './loopy.logic'
 import LoopyBoard from './LoopyBoard.vue'
 
 const state = ref(createLoopyState())
-
-function handleNewGame() {
-  state.value = createLoopyState()
-}
 </script>
 
 <template>

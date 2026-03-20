@@ -4,10 +4,6 @@ import { createSlantState } from './slant.logic'
 import SlantBoard from './SlantBoard.vue'
 
 const state = ref(createSlantState())
-
-function handleNewGame() {
-  state.value = createSlantState()
-}
 </script>
 
 <template>
