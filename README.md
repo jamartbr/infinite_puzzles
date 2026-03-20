@@ -16,7 +16,7 @@ Versiones web de los minijuegos de puzles más populares, jugables de forma ilim
 | Juego | Descripción | Dificultad |
 |-------|-------------|------------|
 <!-- | 👑 **Queens** | Coloca una reina en cada región de color sin que se ataquen. Tableros generados proceduralmente. | ⭐⭐⭐ | -->
-<!-- | ⚡ **Loopy** | Traza un camino que pase por todos los números en orden llenando el tablero entero. | ⭐⭐⭐ | -->
+| 🌀 **Loopy** | Traza un único camino cerrado, de forma que cada celda toque el camino el número de veces que indica. | ⭐⭐⭐ |
 | ❖ **Slant** | Rellena cada celda con / o \\, cumpliendo con las restricciones, sin formar ciclos cerrados. | ⭐⭐⭐ |
 | 🔢 **Tetonor** | Encuentra parejas de números que resuelvan el puzzle. | ⭐⭐⭐ |
 
@@ -59,6 +59,10 @@ pnpm type-check   # Verificación de tipos TypeScript
 infinite-puzzles/
 ├── src/
 │   ├── games/
+│   │   ├── Loopy/             # Juego Loopy
+│   │   │   ├── LoopyGame.vue
+│   │   │   ├── loopy.logic.ts
+│   │   │   └── loopy.types.ts
 │   │   ├── Slant/             # Juego Slant
 │   │   │   ├── SlantGame.vue
 │   │   │   ├── slant.logic.ts

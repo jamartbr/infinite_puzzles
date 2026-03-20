@@ -16,9 +16,9 @@ const GAMES: GameMeta[] = [
     tags: ['lógica', 'estrategia'],
   },
   {
-    id: 'zip',
-    title: 'Zip',
-    emoji: '⚡',
+    id: 'loopy',
+    title: 'Loopy',
+    emoji: '🌀',
     description: 'Traza un camino que pase por todos los números en orden, llenando el tablero entero.',
     difficulty: 3,
     tags: ['caminos', 'rompecabezas'],
@@ -29,14 +29,23 @@ const GAMES: GameMeta[] = [
     emoji: '❖',
     description: 'Rellena cada celda con líneas diagonales, de forma que los círculos toquen el número de líneas que indican y no se formen ciclos.',
     difficulty: 3,
-    tags: ['caminos', 'rompecabezas'],
+    tags: ['ciclos', 'lógica'],
+  },
+  {
+    id: 'tetonor',
+    title: 'Tetonor',
+    emoji: '🔢',
+    description: 'Rellena cada celda con líneas diagonales, de forma que los círculos toquen el número de líneas que indican y no se formen ciclos.',
+    difficulty: 3,
+    tags: ['números', 'sudoku'],
   },
 ]
 
 const CARD_ACCENT: Record<GameId, string> = {
   queens:   '#eb459e',
-  zip:      '#3ba55c',
-  slant:    '#4287f5'
+  loopy:      '#3ba55c',
+  slant:    '#4287f5',
+  tetonor:  '#ffffff',
 }
 
 function winRate(id: GameId): string {
