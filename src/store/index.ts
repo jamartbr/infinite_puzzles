@@ -20,7 +20,7 @@ export const useGameStore = defineStore('game', () => {
 
   const winRateByGame = computed(() => {
     const map = new Map<GameId, number>()
-    const games: GameId[] = ['queens', 'zip', 'slant']
+    const games: GameId[] = ['queens', 'loopy', 'slant', 'tetonor']
 
     for (const gameId of games) {
       const played = history.value.filter((r) => r.gameId === gameId)

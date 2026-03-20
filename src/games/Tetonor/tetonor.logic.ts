@@ -1,33 +1,29 @@
-import { randInt, shuffle } from '@/composables/usePuzzleGenerator'
 import type {
   TetonorPair,
   PairUsage,
   TetonorCell,
   TetonorEntry,
-  TetonorOp,
   TetonorSlot,
   TetonorState,
 } from './tetonor.types'
+import { seededRng, seededShuffle, seededRandInt } from '@/composables/useSeededRNG'
+
 
 // ── Generador ─────────────────────────────────────────────────────────────
-
-function generatePairs(count: number): TetonorPair[] {
-  const pairs: TetonorPair[] = [];
-  for (let i = 0; i < count; i++) {
-    const a = randInt(1, 2*count);
-    const b = randInt(1, 2*count);
-    pairs.push({ a, b });
-  }
-  return pairs;
-}
 
 export function generateTetonorState(
   numOperands: number = 16,   // must be even
   level: number = 0,          // determines fraction of strip slots to hide
+  rng: () => number = Math.random,
 ): TetonorState {
   
   const numPairs = Math.floor(numOperands / 2);
-  const pairs = generatePairs(numPairs);
+
+  // Generate seeded pairs using rng
+  const pairs: TetonorPair[] = Array.from({ length: numPairs }, () => ({
+    a: seededRandInt(1, 2 * numPairs, rng),
+    b: seededRandInt(1, 2 * numPairs, rng),
+  }))
 
   // Build grid cells: one sum cell and one product cell for each pair
   const cellData: { target: number; pairIdx: number; isSum: boolean }[] = [];
@@ -38,7 +34,7 @@ export function generateTetonorState(
   }
 
   // Shuffle cells into a random grid order
-  shuffle(cellData);
+  seededShuffle(cellData, rng);
 
   // Asing row and col to shuffled targets
   const cells: TetonorCell[] = [];
@@ -57,7 +53,7 @@ export function generateTetonorState(
   const totalSlots = allOperands.length
   const numHidden = Math.round(totalSlots * level)
   const hiddenIndices = new Set(
-    shuffle([...Array(totalSlots).keys()]).slice(0, numHidden)
+    seededShuffle([...Array(totalSlots).keys()], rng).slice(0, numHidden)
   )
 
   const strip: TetonorSlot[] = allOperands.map((value, i) => ({
@@ -74,6 +70,11 @@ export function generateTetonorState(
     status: 'idle',
     level: 0,
   }
+}
+
+// Seeded daily variant
+export function generateDailyTetonorState(seed: number, size: number, level: number): TetonorState {
+  return generateTetonorState(size, level, seededRng(seed))
 }
 
 // ── Validation ────────────────────────────────────────────────────────────
@@ -178,11 +179,9 @@ export function computeStripUsed(state: TetonorState): boolean[] {
  *    (operands must come from the strip, respecting counts)
  */
 export function validateTetonor(state: TetonorState): boolean {
-  const { cells, strip, pairs, entries } = state
-
   // Check every cell is correctly filled
-  for (const cell of cells) {
-    const entry = entries.get(cell.id)
+  for (const cell of state.cells) {
+    const entry = state.entries.get(cell.id)
     if (!entry || !evaluateEntry(entry, cell.target)) return false
   }
 

@@ -1,5 +1,6 @@
 import { shuffle } from '@/composables/usePuzzleGenerator'
 import type { SlantCell, SlantClue, SlantClues, SlantState } from './slant.types'
+import { seededRng, seededShuffle, seededRandInt } from '@/composables/useSeededRNG'
 
 // ─── Clue validation ──────────────────────────────────────────────────────────
 //
@@ -125,14 +126,17 @@ export function isValidSlantState(state: SlantState, clues: SlantClues): boolean
 // ─── Puzzle generator ────────────────────────────────────────────────────────
 
 /** Generate a random valid Slant solution for an n×n board. */
-export function generateSolution(n: number): SlantCell[][] {
+export function generateSolution(
+  n: number,
+  rng: () => number = Math.random,
+): SlantCell[][] {
   // Try random boards until we find one without cycles.
   // For small n this is fast; for n≥8 a smarter approach is needed but fine here.
   const choices: SlantCell[] = ['/', '\\']
   for (let attempt = 0; attempt < 2000; attempt++) {
     const board: SlantCell[][] = Array.from({ length: n }, () =>
       Array.from({ length: n }, () =>
-        choices[Math.floor(Math.random() * 2)] as SlantCell
+        choices[Math.floor(rng() * 2)] as SlantCell
       )
     )
     if (!hasCycle(board)) return board as SlantCell[][]
@@ -144,7 +148,8 @@ export function generateSolution(n: number): SlantCell[][] {
 /** Derive clues from a complete solution. Pass `density` 0–1 to control hint sparsity. */
 export function deriveCluess(
   solution: SlantCell[][],
-  density = 0.45
+  density = 0.45,
+  rng: () => number = Math.random,
 ): SlantClues {
   const n = solution.length
   const clues: SlantClues = Array.from({ length: n + 1 }, () =>
@@ -152,7 +157,7 @@ export function deriveCluess(
   )
   for (let vy = 0; vy <= n; vy++) {
     for (let vx = 0; vx <= n; vx++) {
-      if (Math.random() < density) {
+      if (rng() < density) {
         clues[vy][vx] = countAtVertex(solution as (SlantCell | null)[][], vy, vx) as SlantClue
       }
     }
@@ -259,15 +264,23 @@ function deriveMinimalClues(solution: SlantCell[][], n: number): SlantClues {
 }
 
 /** Create a fresh SlantState from scratch. */
-export function createSlantPuzzle(n = 6): SlantState {
-  const solution = generateSolution(n)
-  const clues = deriveMinimalClues(solution, n)
+export function createSlantState(
+  size = 6,
+  level = 0,
+  rng: () => number = Math.random,
+): SlantState {
+  const solution = generateSolution(size, rng)
+  const clues = deriveMinimalClues(solution, size)
   return {
-    size: n,
-    board: Array.from({ length: n }, () => Array(n).fill(' ')),
+    size: size,
+    board: Array.from({ length: size }, () => Array(size).fill(' ')),
     clues,
     solution,
     moves: 0,
     status: 'playing',
   }
+}
+
+export function generateDailySlantState(seed: number, size: number, level: number): SlantState {
+  return createSlantState(size, level, seededRng(seed))
 }

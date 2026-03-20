@@ -17,16 +17,28 @@ const router = createRouter({
       meta: { title: 'Queens' },
     },
     {
-      path: '/zip',
-      name: 'zip',
-      component: () => import('@/games/Zip/ZipGame.vue'),
-      meta: { title: 'Zip' },
+      path: '/loopy',
+      name: 'loopy',
+      component: () => import('@/games/Loopy/LoopyGame.vue'),
+      meta: { title: 'Loopy' },
     },
     {
       path: '/slant',
       name: 'slant',
       component: () => import('@/games/Slant/SlantGame.vue'),
       meta: { title: 'Slant' },
+    },
+    {
+      path: '/tetonor',
+      name: 'tetonor',
+      component: () => import('@/games/Tetonor/TetonorGame.vue'),
+      meta: { title: 'Tetonor' },
+    },
+    {
+      path: '/daily',
+      name: 'daily',
+      component: () => import('@/daily/DailyGame.vue'),
+      meta: { title: 'Puzzle del día' },
     },
     {
       path: '/:pathMatch(.*)*',

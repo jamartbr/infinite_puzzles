@@ -1,4 +1,6 @@
 import type { LoopyState, EdgeKey, EdgeState } from './loopy.types'
+import { seededRng, seededShuffle } from '@/composables/useSeededRNG'
+
 
 // ── Helpers ───────────────────────────────────────────────────────────────
 
@@ -158,14 +160,17 @@ function loopCellCoverage(n: number, loop: Set<EdgeKey>): number {
   return touched / (n * n)
 }
 
-function generateLoop(n: number): Set<EdgeKey> {
+function generateLoop(
+  n: number,
+  rng: () => number = Math.random,
+): Set<EdgeKey> {
   // Random target between 75% and 100% coverage
-  const targetCoverage = 0.75 + Math.random() * 0.25;
+  const targetCoverage = 0.75 + rng() * 0.25;
 
   for (let attempt = 0; attempt < 300; attempt++) {
     const vkey = (r: number, c: number) => `${r},${c}`
-    const startR = Math.floor(Math.random() * (n + 1))
-    const startC = Math.floor(Math.random() * (n + 1))
+    const startR = Math.floor(rng() * (n + 1))
+    const startC = Math.floor(rng() * (n + 1))
     const visited = new Set([vkey(startR, startC)])
     const pathV: [number, number][] = [[startR, startC]]
     const pathE: EdgeKey[] = []
@@ -174,13 +179,13 @@ function generateLoop(n: number): Set<EdgeKey> {
       const [cr, cc] = pathV[pathV.length - 1]
       const nb = ([-1,0,1,0].map((dr,i) => [cr+dr, cc+([0,-1,0,1][i])] as [number,number]))
         .filter(([nr,nc]) => nr >= 0 && nr <= n && nc >= 0 && nc <= n)
-        .sort(() => Math.random() - 0.5)
+      seededShuffle(nb, rng)
 
       if (pathV.length >= 4) {
         const close = nb.find(([nr,nc]) => nr === startR && nc === startC)        
         if (close) {
           const candidate = new Set([...pathE, edgeKey(cr, cc, startR, startC)])
-          if (loopCellCoverage(n, candidate) >= targetCoverage && Math.random() < 0.15) {
+          if (loopCellCoverage(n, candidate) >= targetCoverage && rng() < 0.15) {
             return candidate
           }
         }
@@ -214,12 +219,17 @@ function computeFullClues(n: number, solution: Set<EdgeKey>): number[][] {
 
 const CLUE_FRACTION = [0.80, 0.55, 0.35]
 
-function generateClues(n: number, solution: Set<EdgeKey>, level: number): (number|null)[][] {
+function generateClues(
+  n: number,
+  solution: Set<EdgeKey>,
+  level: number,
+  rng: () => number = Math.random,
+): (number|null)[][] {
   const full = computeFullClues(n, solution)
   const clues: (number|null)[][] = full.map(row => [...row])
   const target  = Math.floor(n * n * CLUE_FRACTION[level])
   const positions = Array.from({ length: n*n }, (_, i) => [Math.floor(i/n), i%n] as [number,number])
-    .sort(() => Math.random() - 0.5)
+  seededShuffle(positions, rng)
   let remaining = n * n
   for (const [r, c] of positions) {
     if (remaining <= target) break
@@ -236,12 +246,20 @@ function generateClues(n: number, solution: Set<EdgeKey>, level: number): (numbe
 
 // ── API pública ───────────────────────────────────────────────────────────
 
-export function createLoopyState(size = 5, level = 0): LoopyState {
-  const solution = generateLoop(size)
-  const clues    = generateClues(size, solution, level)
+export function createLoopyState(
+  size = 5,
+  level = 0,
+  rng: () => number = Math.random,
+): LoopyState {
+  const solution = generateLoop(size, rng)
+  const clues    = generateClues(size, solution, level, rng)
   const edgeMap  = new Map<EdgeKey, EdgeState>()
   for (const e of allEdges(size)) edgeMap.set(e, 'unknown')
   return { size, clues, solution, edges: edgeMap, status: 'idle', level }
+}
+
+export function generateDailyLoopyState(seed: number, size: number, level: number): LoopyState {
+  return createLoopyState(size, level, seededRng(seed))
 }
 
 export function toggleEdge(state: LoopyState, key: EdgeKey): void {
@@ -257,15 +275,6 @@ export function cellInfo(state: LoopyState, r: number, c: number) {
     unknown: es.filter(e => state.edges.get(e) === 'unknown').length,
     clue:    state.clues[r][c],
   }
-}
-
-export function checkWin(state: LoopyState): boolean {
-  for (const [key, edgeState] of state.edges) {
-    const inSol = state.solution.has(key)
-    if (inSol  && edgeState !== 'on')  return false
-    if (!inSol && edgeState === 'on')  return false
-  }
-  return true
 }
 
 export function progressCount(state: LoopyState) {

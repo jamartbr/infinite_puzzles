@@ -2,9 +2,18 @@
 import { useRouter } from 'vue-router'
 import { useGameStore } from '@/store'
 import type { GameMeta, GameId } from '@/types'
+import { getDailyMeta } from '@/composables/useDailyPuzzle'
 
 const router = useRouter()
 const store  = useGameStore()
+
+const daily = getDailyMeta()
+const solvedToday = !!localStorage.getItem(`daily_solved_${daily.date}`)
+const GAME_LABELS: Record<string, string> = {
+  tetonor: '🔢 Tetonor', loopy: '🌀 Loopy',
+  queens: '👑 Queens',   slant: '❖ Slant',
+}
+const LEVEL_LABELS = ['Fácil', 'Medio', 'Difícil']
 
 const GAMES: GameMeta[] = [
   {
@@ -62,6 +71,18 @@ function winRate(id: GameId): string {
         Genera nuevos puzzles sin esperar al día siguiente.
       </p>
     </div>
+
+    <RouterLink to="/daily" class="daily-card">
+    <div class="daily-card-left">
+      <span class="daily-badge">HOY</span>
+      <span class="daily-title">📅 Puzzle del día</span>
+      <span class="daily-sub">
+        {{ GAME_LABELS[daily.gameId] }} · {{ LEVEL_LABELS[daily.level] }}
+      </span>
+    </div>
+    <span v-if="solvedToday" class="daily-done">✓ Resuelto</span>
+    <span v-else class="daily-cta">Jugar →</span>
+  </RouterLink>
 
     <div class="games-grid">
       <article
@@ -211,4 +232,33 @@ h1 em { font-style: normal; color: #5865f2; }
   font-size: 13px;
   color: var(--subtle);
 }
+
+/* Daily */
+.daily-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 24px;
+  background: linear-gradient(135deg,
+    color-mix(in srgb, var(--accent) 15%, var(--surface)),
+    var(--surface)
+  );
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-lg);
+  margin-bottom: 24px;
+  text-decoration: none;
+  color: var(--text);
+  transition: all var(--transition);
+}
+.daily-card:hover { border-color: var(--accent-h); filter: brightness(1.05); }
+.daily-card-left  { display: flex; flex-direction: column; gap: 4px; }
+.daily-badge {
+  font-size: 10px; font-weight: 700; letter-spacing: 0.1em;
+  color: var(--accent); text-transform: uppercase;
+}
+.daily-title { font-size: 18px; font-weight: 700; }
+.daily-sub   { font-size: 13px; color: var(--muted); }
+.daily-done  { color: #2e7d4f; font-weight: 600; font-size: 14px; }
+.daily-cta   { color: var(--accent); font-weight: 600; font-size: 14px; }
+
 </style>
