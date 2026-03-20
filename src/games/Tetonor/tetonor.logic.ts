@@ -55,7 +55,7 @@ export function generateTetonorState(
 
   // Decide which strip slots to hide
   const totalSlots = allOperands.length
-  const numHidden = Math.round(totalSlots * 0)
+  const numHidden = Math.round(totalSlots * level)
   const hiddenIndices = new Set(
     shuffle([...Array(totalSlots).keys()]).slice(0, numHidden)
   )
@@ -138,6 +138,39 @@ export function computePairUsages(state: TetonorState): Map<number, PairUsage> {
   return usages
 }
 
+export function computeStripUsed(state: TetonorState): boolean[] {
+  // Primero calculamos cuántas veces cada valor está en un par "done"
+  const pairUsages = computePairUsages(state)
+  const doneByValue = new Map<number, number>()
+  for (const [i, u] of pairUsages.entries()) {
+    if (!u.done) continue
+    const { a, b } = state.pairs[i]
+    doneByValue.set(a, (doneByValue.get(a) ?? 0) + 1)
+    doneByValue.set(b, (doneByValue.get(b) ?? 0) + 1)
+  }
+
+  // Para slots visibles: se tachan consumiendo ocurrencias done de izquierda a derecha
+  // Para slots ocultos: solo se tachan si userValue coincide con un valor done disponible
+  const consumed = new Map<number, number>()
+
+  return state.strip.map(slot => {
+    if (!slot.hidden) {
+      const available = doneByValue.get(slot.value) ?? 0
+      const soFar     = consumed.get(slot.value) ?? 0
+      consumed.set(slot.value, soFar + 1)
+      return soFar < available
+    } else {
+      // Slot oculto: el usuario tiene que haber escrito el valor correcto
+      const userVal = parseOperand(slot.userValue ?? '')
+      if (userVal === null) return false
+      const available = doneByValue.get(userVal) ?? 0
+      const soFar     = consumed.get(userVal) ?? 0
+      consumed.set(userVal, soFar + 1)
+      return soFar < available
+    }
+  })
+}
+
 /**
  * Full puzzle validation:
  * 1. Every cell must be correctly solved.
@@ -158,7 +191,10 @@ export function validateTetonor(state: TetonorState): boolean {
   for (const u of usages.values()) {
     if (!u.done) return false
   }
-  return true
+
+  // Check every strip slot is crossed out (including hidden)
+  const stripUsed = computeStripUsed(state)
+  return stripUsed.every(Boolean)
 }
 
 // ── Entry helpers ─────────────────────────────────────────────────────────
@@ -177,6 +213,6 @@ export function getEntry(
 
 // ── State factory ─────────────────────────────────────────────────────────
 
-export function createTetonorState(): TetonorState {
-  return generateTetonorState();
+export function createTetonorState(numOperands=16, level=0): TetonorState {
+  return generateTetonorState(numOperands, level);
 }

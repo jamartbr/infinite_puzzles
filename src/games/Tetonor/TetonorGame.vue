@@ -9,6 +9,7 @@ import {
   getEntry,
   emptyEntry,
   computePairUsages,
+  computeStripUsed,
 } from './tetonor.logic'
 import type { TetonorState, TetonorEntry, TetonorOp } from './tetonor.types'
 
@@ -18,6 +19,7 @@ const store     = useGameStore()
 // ── State ─────────────────────────────────────────────────────────────────
 const state     = ref<TetonorState>(createTetonorState())
 const startedAt = ref(Date.now())
+const level     = ref(0)
 
 // ── Derived ───────────────────────────────────────────────────────────────
 const solvedCount = computed(() => {
@@ -26,39 +28,9 @@ const solvedCount = computed(() => {
     if (evaluateEntry(getEntry(state.value.entries, cell.id), cell.target)) n++
   return n
 })
-const totalCells = computed(() => state.value.pairs.length * 2)
-const pairUsages = computed(() => computePairUsages(state.value))
-
-// Cada slot del strip se tacha si el par al que pertenece está done
-// El strip tiene los operandos ordenados; necesitamos mapear slot → par
-const stripUsed = computed(() => {
-  // Para cada slot, busca si algún par con ese valor está done
-  // Consumimos pares done de izquierda a derecha para slots con el mismo valor
-  const doneCounts = new Map<number, number>()
-  for (const u of pairUsages.value.values()) {
-    if (!u.done) continue
-    const pair = state.value.pairs[
-      [...pairUsages.value.values()].indexOf(u) // necesitamos el índice real
-    ]
-    // mejor iterar con entries:
-  }
-  // Reescribimos con entries:
-  const doneByValue = new Map<number, number>()
-  for (const [i, u] of pairUsages.value.entries()) {
-    if (!u.done) continue
-    const { a, b } = state.value.pairs[i]
-    doneByValue.set(a, (doneByValue.get(a) ?? 0) + 1)
-    doneByValue.set(b, (doneByValue.get(b) ?? 0) + 1)
-  }
-
-  const consumed = new Map<number, number>()
-  return state.value.strip.map(slot => {
-    const available = doneByValue.get(slot.value) ?? 0
-    const soFar     = consumed.get(slot.value) ?? 0
-    consumed.set(slot.value, soFar + 1)
-    return soFar < available
-  })
-})
+const totalCells  = computed(() => state.value.pairs.length * 2)
+const pairUsages  = computed(() => computePairUsages(state.value))
+const stripUsed   = computed(() => computeStripUsed(state.value))
 
 // ── Entry access (reactive wrapper) ──────────────────────────────────────
 function entryFor(cellId: string): TetonorEntry {
@@ -68,6 +40,7 @@ function entryFor(cellId: string): TetonorEntry {
 }
 
 function cellStatus(cellId: string, target: number): 'empty' | 'correct' | 'wrong' {
+  if (state.value.status!=='won') return 'empty'
   const e = entryFor(cellId)
   if (!e.left && !e.right && !e.op) return 'empty'
   return evaluateEntry(e, target) ? 'correct' : 'wrong'
@@ -75,6 +48,13 @@ function cellStatus(cellId: string, target: number): 'empty' | 'correct' | 'wron
 
 // ── Input handlers ────────────────────────────────────────────────────────
 function onInput(cellId: string) {
+  state.value.moves++
+  state.value.status = 'playing'
+  checkWin()
+}
+
+function onStripInput(i: number, raw: string) {
+  state.value.strip[i].userValue = raw
   state.value.moves++
   state.value.status = 'playing'
   checkWin()
@@ -103,14 +83,27 @@ function checkWin() {
 // ── Actions ───────────────────────────────────────────────────────────────
 function resetGame() {
   state.value.entries = new Map()
+  state.value.strip.forEach(s => { s.userValue = '' })
   state.value.moves   = 0
   state.value.status  = 'idle'
 }
 
 function newGame() {
-  state.value   = createTetonorState()
+  state.value   = createTetonorState(16, level.value)
   startedAt.value = Date.now()
 }
+
+function onLevelChange(newLevel: number) {
+  level.value = newLevel
+  newGame()
+}
+
+// Etiquetas de nivel
+const LEVELS = [
+  { value: 0, label: '🟢 Fácil' },
+  { value: 0.25, label: '🟡 Medio' },
+  { value: 0.5, label: '🔴 Difícil' },
+]
 </script>
 
 <template>
@@ -135,11 +128,23 @@ function newGame() {
 
     <!-- Controls -->
     <div class="mode-row">
-      <button class="btn btn-ghost btn-sm" @click="resetGame">↩ Reiniciar</button>
-      <button class="btn btn-ghost btn-sm" @click="newGame">🔄 Nuevo tablero</button>
+      <!-- Selector de nivel -->
+      <div class="level-selector">
+        <button
+          v-for="lvl in LEVELS"
+          :key="lvl.value"
+          class="btn btn-ghost btn-sm"
+          :class="{ active: level === lvl.value }"
+          @click="onLevelChange(lvl.value)"
+        >{{ lvl.label }}</button>
+      </div>
+      <div class="action-btns">
+        <button class="btn btn-ghost btn-sm" @click="resetGame">↩ Reiniciar</button>
+        <button class="btn btn-ghost btn-sm" @click="newGame">🔄 Nuevo tablero</button>
+      </div>
     </div>
 
-    <!-- Dynamic Grid: width = min(4, cells.length), height = ceil(cells.length / width) -->
+    <!-- Grid -->
     <div
       class="grid"
       :style="{ '--grid-cols': Math.min(4, state.cells.length) }"
@@ -191,7 +196,7 @@ function newGame() {
 
     <!-- Strip -->
     <div class="strip-section">
-      <br/>
+      <div class="strip-label">Números disponibles</div>
       <div class="strip">
         <div
           v-for="(slot, i) in state.strip"
@@ -200,7 +205,15 @@ function newGame() {
           :class="{ hidden: slot.hidden, used: stripUsed[i] }"
         >
           <span v-if="!slot.hidden">{{ slot.value }}</span>
-          <span v-else class="blank">?</span>
+          <input
+            v-else
+            type="number"
+            min="1"
+            class="operand-input strip-input"
+            :value="slot.userValue ?? ''"
+            @input="e => onStripInput(i, (e.target as HTMLInputElement).value)"
+            placeholder="?"
+          />
         </div>
       </div>
     </div>
@@ -279,6 +292,16 @@ function newGame() {
   gap: 8px;
   flex-wrap: wrap;
   margin-bottom: 20px;
+}
+
+.level-selector {
+  display: flex;
+  gap: 6px;
+}
+
+.action-btns {
+  display: flex;
+  gap: 8px;
 }
 
 /* ── Grid ── */
@@ -445,6 +468,19 @@ function newGame() {
   font-weight: 400;
 }
 
+.strip-input {
+  width: 100%;
+  height: 100%;
+  border: none;
+  background: transparent;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  padding: 0;
+}
+.strip-input:focus { outline: none; }
+
 /* ── Hint ── */
 .hint-text {
   font-size: 12px;
@@ -469,6 +505,11 @@ function newGame() {
   background: var(--surface);
   border: 1px solid var(--border);
   color: var(--text);
+}
+.btn-ghost.active {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 8%, var(--surface));
 }
 .btn-ghost:hover { border-color: var(--accent); }
 .btn-sm { padding: 7px 14px; font-size: 12px; }

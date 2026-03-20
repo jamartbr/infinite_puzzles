@@ -33,6 +33,7 @@ export interface TetonorEntry {
 export interface TetonorSlot {
   value: number
   hidden: boolean     // if true, player must deduce it
+  userValue?: string  // relevant only when hidden is true
 }
 
 export interface TetonorState {
