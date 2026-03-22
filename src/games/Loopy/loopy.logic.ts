@@ -177,9 +177,9 @@ function generateLoop(
 
     for (let steps = 0; steps < 300; steps++) {
       const [cr, cc] = pathV[pathV.length - 1]
-      const nb = ([-1,0,1,0].map((dr,i) => [cr+dr, cc+([0,-1,0,1][i])] as [number,number]))
+      let nb = ([-1,0,1,0].map((dr,i) => [cr+dr, cc+([0,-1,0,1][i])] as [number,number]))
         .filter(([nr,nc]) => nr >= 0 && nr <= n && nc >= 0 && nc <= n)
-      seededShuffle(nb, rng)
+      nb = seededShuffle(nb, rng)
 
       if (pathV.length >= 4) {
         const close = nb.find(([nr,nc]) => nr === startR && nc === startC)        
@@ -228,8 +228,8 @@ function generateClues(
   const full = computeFullClues(n, solution)
   const clues: (number|null)[][] = full.map(row => [...row])
   const target  = Math.floor(n * n * CLUE_FRACTION[level])
-  const positions = Array.from({ length: n*n }, (_, i) => [Math.floor(i/n), i%n] as [number,number])
-  seededShuffle(positions, rng)
+  let positions = Array.from({ length: n*n }, (_, i) => [Math.floor(i/n), i%n] as [number,number])
+  positions = seededShuffle(positions, rng)
   let remaining = n * n
   for (const [r, c] of positions) {
     if (remaining <= target) break

@@ -107,12 +107,12 @@ function resetGame() {
 }
 
 function newGame() {
-  startGeneration(5, level.value)
+  startGeneration(state.value.size, level.value)
 }
 
 function onLevelChange(lv: number) {
   level.value = lv
-  startGeneration(5, lv)
+  startGeneration(state.value.size, lv)
 }
 
 // ── Helpers de layout ─────────────────────────────────────────────────────
