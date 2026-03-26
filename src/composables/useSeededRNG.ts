@@ -36,6 +36,11 @@ export function seededShuffle<T>(arr: T[], rng: () => number): T[] {
   return a
 }
 
+/** Seeded range shuffle */
+export function shuffledRange(n: number, rng: () => number): number[] {
+  return seededShuffle(Array.from({ length: n }, (_, i) => i), rng)
+}
+
 /** Seeded integer in [min, max] */
 export function seededRandInt(min: number, max: number, rng: () => number): number {
   return min + Math.floor(rng() * (max - min + 1))

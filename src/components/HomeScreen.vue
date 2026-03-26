@@ -12,6 +12,7 @@ const solvedToday = !!localStorage.getItem(`daily_solved_${daily.date}`)
 const GAME_LABELS: Record<string, string> = {
   tetonor: '🔢 Tetonor', loopy: '🌀 Loopy',
   queens: '👑 Queens',   slant: '❖ Slant',
+  toggle: '☯︎ Toggle',
 }
 const LEVEL_LABELS = ['Fácil', 'Medio', 'Difícil']
 
@@ -48,6 +49,14 @@ const GAMES: GameMeta[] = [
     difficulty: 3,
     tags: ['números', 'sudoku'],
   },
+  {
+    id: 'toggle',
+    title: 'Toggle',
+    emoji: '☯︎',
+    description: 'Rellena cada celda con 0 o 1. Los números indican la cantidad de cambios en cada fila/columna.',
+    difficulty: 2,
+    tags: ['lógica'],
+  },
 ]
 
 const CARD_ACCENT: Record<GameId, string> = {
@@ -55,6 +64,7 @@ const CARD_ACCENT: Record<GameId, string> = {
   loopy:      '#3ba55c',
   slant:    '#4287f5',
   tetonor:  '#ffffff',
+  toggle:   '#ff0000',
 }
 
 function winRate(id: GameId): string {

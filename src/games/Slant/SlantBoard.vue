@@ -8,10 +8,19 @@ import {
 } from './slant.logic'
 import type { SlantState, SlantCell } from './slant.types'
 
+// ── Constants ─────────────────────────────────────────────────────────────
+
 const router    = useRouter()
 const store     = useGameStore()
+const startedAt = ref(Date.now())
+const level     = ref(0)
 
-// ── Constants ─────────────────────────────────────────────────────────────
+const LEVELS = [
+  { value: 0, label: '🟢 Fácil' },
+  { value: 1, label: '🟡 Medio' },
+  { value: 2, label: '🔴 Difícil' },
+]
+
 const CELL   = 58   // px per cell
 const MARGIN = 22   // px around board for clue circles
 const CLUE_R = 10   // radius of clue vertex circles
@@ -28,7 +37,6 @@ const emit = defineEmits<{
 }>()
 
 const state      = ref<SlantState>(props.initialState)
-const startedAt  = ref(Date.now())
 const showErrors = ref(true)
 
 // ── Derived ───────────────────────────────────────────────────────────────
@@ -231,8 +239,12 @@ function resetBoard() {
 }
 
 function newGame() {
-  state.value     = createSlantState(6)
+  state.value     = createSlantState()
   startedAt.value = Date.now()
+}
+function onLevelChange(lv: number) {
+  level.value = lv;
+  newGame();
 }
 </script>
 
@@ -255,6 +267,17 @@ function newGame() {
       <li>El número en cada vértice indica cuántas diagonales lo tocan</li>
       <li>Las líneas no pueden formar ciclos cerrados</li>
     </ul>
+
+    <!-- Nivel -->
+    <div v-if="!(props.daily)" class="mode-row">
+      <button
+        v-for="lv in LEVELS"
+        :key="lv.value"
+        class="btn btn-ghost btn-sm"
+        :class="{ active: level === lv.value }"
+        @click="onLevelChange(lv.value)"
+      >{{ lv.label }}</button>
+    </div>
 
     <!-- Controls -->
     <div class="mode-row">
@@ -345,9 +368,9 @@ function newGame() {
 
     <!-- Win result box -->
     <div v-if="state.status === 'won'" class="result-box">
-      <p class="result-emoji">╱</p>
+      <p class="result-emoji">🔥</p>
       <p class="result-title">¡Puzzle resuelto!</p>
-      <p class="result-sub">Lo lograste en {{ state.moves }} movimientos.</p>
+      <p class="result-sub">Resuelto en {{ ((Date.now() - startedAt) / 1000).toFixed(0) }}s.</p>
       <button class="btn btn-primary" @click="newGame">Nuevo tablero</button>
     </div>
   </div>

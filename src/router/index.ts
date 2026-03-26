@@ -35,6 +35,12 @@ const router = createRouter({
       meta: { title: 'Tetonor' },
     },
     {
+      path: '/toggle',
+      name: 'toggle',
+      component: () => import('@/games/Toggle/ToggleGame.vue'),
+      meta: { title: 'Toggle' },
+    },
+    {
       path: '/daily',
       name: 'daily',
       component: () => import('@/daily/DailyGame.vue'),

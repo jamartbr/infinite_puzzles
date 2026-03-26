@@ -8,11 +8,13 @@ import { getDailyMeta, saveDailyState, loadDailyState } from '@/composables/useD
 import TetonorBoard from '@/games/Tetonor/TetonorBoard.vue'
 import LoopyBoard   from '@/games/Loopy/LoopyBoard.vue'
 import SlantBoard   from '@/games/Slant/SlantBoard.vue'
-// import QueensBoard from '@/games/Queens/QueensBoard.vue'
+import QueensBoard from '@/games/Queens/QueensBoard.vue'
+import ToggleBoard from '@/games/Toggle/ToggleBoard.vue'
 
 const router = useRouter()
 const store  = useGameStore()
 const meta   = getDailyMeta()
+const startedAt = ref(Date.now())
 
 // Check if already solved today
 const solvedKey = `daily_solved_${meta.date}`
@@ -33,14 +35,14 @@ async function initPuzzle() {
   await new Promise(r => setTimeout(r, 30))
 
   switch (meta.gameId) {
-    case 'tetonor': {
-      const { generateDailyTetonorState } = await import('@/games/Tetonor/tetonor.logic')
-      gameState.value = generateDailyTetonorState(meta.seed, meta.size, meta.level)
-      break
-    }
     case 'loopy': {
       const { generateDailyLoopyState } = await import('@/games/Loopy/loopy.logic')
       gameState.value = generateDailyLoopyState(meta.seed, meta.size, meta.level)
+      break
+    }
+    case 'queens': {
+      const { generateDailyQueensState } = await import('@/games/Queens/queens.logic')
+      gameState.value = generateDailyQueensState(meta.seed, meta.size, meta.level)
       break
     }
     case 'slant': {
@@ -48,11 +50,16 @@ async function initPuzzle() {
       gameState.value = generateDailySlantState(meta.seed, meta.size, meta.level)
       break
     }
-    // case 'queens': {
-    //   const { generateDailyQueensState } = await import('@/games/Queens/queens.logic')
-    //   gameState.value = generateDailyQueensState(meta.seed, meta.size, meta.level)
-    //   break
-    // }
+    case 'tetonor': {
+      const { generateDailyTetonorState } = await import('@/games/Tetonor/tetonor.logic')
+      gameState.value = generateDailyTetonorState(meta.seed, meta.size, meta.level)
+      break
+    }
+    case 'toggle': {
+      const { generateDailyToggleState } = await import('@/games/Toggle/toggle.logic')
+      gameState.value = generateDailyToggleState(meta.seed, meta.size, meta.level)
+      break
+    }
     default:
       console.error('Unknown gameId:', meta.gameId)
       loading.value = false
@@ -103,10 +110,11 @@ const timer = setInterval(() => {
 onUnmounted(() => clearInterval(timer))
 
 const GAME_LABELS: Record<string, string> = {
+  loopy:   '🌀 Loopy',
+  queens:  '👑 Queens',
+  slant:   '❖ Slant',
+  toggle: '☯︎ Toggle',
   tetonor: '🔢 Tetonor',
-  loopy:   '⚡ Loopy',
-//   queens:  '♛ Queens',
-  slant:   '╱ Slant',
 }
 const LEVEL_LABELS = ['🟢 Fácil', '🟡 Medio', '🔴 Difícil']
 </script>
@@ -128,8 +136,9 @@ const LEVEL_LABELS = ['🟢 Fácil', '🟡 Medio', '🔴 Difícil']
     <!-- Already solved -->
     <div v-if="alreadySolved" class="solved-box">
       <p class="result-emoji">🏆</p>
-      <p class="result-title">¡Ya resolviste el puzzle de hoy!</p>
-      <p class="result-sub">Vuelve mañana en:</p>
+      <p class="result-title">¡Has resuelto el puzzle de hoy!</p>
+      <p class="time-sub">Resuelto en {{ ((Date.now() - startedAt) / 1000).toFixed(0) }}s.</p>
+      <p class="result-sub">Vuelve en:</p>
       <p class="countdown">{{ countdown }}</p>
       <button class="btn btn-ghost" @click="router.push('/')">Volver al inicio</button>
     </div>
@@ -142,15 +151,15 @@ const LEVEL_LABELS = ['🟢 Fácil', '🟡 Medio', '🔴 Difícil']
 
     <!-- Game boards -->
     <template v-else-if="gameState">
-        <TetonorBoard
-            v-if="meta.gameId === 'tetonor'"
+        <LoopyBoard
+            v-if="meta.gameId === 'loopy'"
             :initial-state="(gameState as any)"
             :daily="true"
             @update:state="onStateChange"
             @win="onWin"
         />
-        <LoopyBoard
-            v-else-if="meta.gameId === 'loopy'"
+        <QueensBoard
+            v-else-if="meta.gameId === 'queens'"
             :initial-state="(gameState as any)"
             :daily="true"
             @update:state="onStateChange"
@@ -163,13 +172,20 @@ const LEVEL_LABELS = ['🟢 Fácil', '🟡 Medio', '🔴 Difícil']
             @update:state="onStateChange"
             @win="onWin"
         />
-        <!-- <QueensBoard
-            v-else-if="meta.gameId === 'queens'"
+        <TetonorBoard
+            v-else-if="meta.gameId === 'tetonor'"
             :initial-state="(gameState as any)"
             :daily="true"
             @update:state="onStateChange"
             @win="onWin"
-        /> -->
+        />
+        <ToggleBoard
+            v-else-if="meta.gameId === 'toggle'"
+            :initial-state="(gameState as any)"
+            :daily="true"
+            @update:state="onStateChange"
+            @win="onWin"
+        />
     </template>
   </div>
 </template>

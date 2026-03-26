@@ -278,6 +278,7 @@ export function createSlantState(
     solution,
     moves: 0,
     status: 'playing',
+    level: level,
   }
 }
 

@@ -3,7 +3,7 @@
 // ============================================================
 
 /** Identificadores de juego disponibles */
-export type GameId = 'queens' | 'loopy' | 'slant' | 'tetonor'
+export type GameId = 'queens' | 'loopy' | 'slant' | 'tetonor' | 'toggle'
 
 /** Estado de una partida en curso */
 export type GameStatus = 'idle' | 'playing' | 'won' | 'lost'

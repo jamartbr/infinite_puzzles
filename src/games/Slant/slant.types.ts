@@ -14,6 +14,7 @@ export interface SlantState {
   board: SlantCell[][];        // celdas del jugador, null = vacía
   clues: SlantClues;           // pistas en las esquinas
   solution: SlantCell[][];     // solución completa
-  moves: number
-  status: GameStatus
+  moves: number;
+  status: GameStatus;
+  level:     number;
 };

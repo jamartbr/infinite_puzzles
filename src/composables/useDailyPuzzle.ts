@@ -1,7 +1,7 @@
 import { dateSeed, todayString, seededRng, seededRandInt } from './useSeededRNG'
 import type { GameId } from '@/types'
 
-export type DailyGameId = Extract<GameId, 'tetonor' | 'loopy' | 'slant'>
+export type DailyGameId = Extract<GameId, 'loopy' | 'queens' | 'slant' | 'tetonor' | 'toggle'>
 
 export interface DailyMeta {
   date:    string
@@ -11,7 +11,7 @@ export interface DailyMeta {
   seed:    number
 }
 
-const GAME_IDS: DailyGameId[] = ['tetonor', 'loopy', 'slant']
+const GAME_IDS: DailyGameId[] = ['loopy', 'queens', 'slant', 'tetonor', 'toggle']
 
 const LS_STATE_KEY = 'daily_state'
 
@@ -29,7 +29,8 @@ export function getDailyMeta(): DailyMeta {
     case 'tetonor': size = seededRandInt(6, 10, rng) * 2; break  // 12–20 operands
     case 'loopy':   size = 5;                              break  // always 5×5
     case 'slant':   size = 6;      break  // 6–8
-    // case 'queens':  size = seededRandInt(6, 9, rng);      break  // 6–9
+    case 'queens':  size = seededRandInt(6, 9, rng);      break  // 6–9
+    case 'toggle': size = seededRandInt(6, 8, rng); break
     default:        size = 5
   }
 

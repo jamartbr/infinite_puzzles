@@ -23,6 +23,7 @@ const LEVELS = [
 ]
 
 // ── Estado ────────────────────────────────────────────────────────────────
+
 const props = defineProps<{
   initialState: LoopyState
   daily?: boolean
